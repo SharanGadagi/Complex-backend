@@ -27,4 +27,10 @@ app.use(
 //curd operation with cookie data
 app.use(cookieParser());
 
+//import all routes
+import userRoutes from "./routes/userRoutes.js";
+
+// routes declaration
+app.use("/api/v1/users", userRoutes);
+
 export default app;

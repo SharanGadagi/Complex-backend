@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import jwt from "json-web-token";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { emit } from "nodemon";
 
 const userSchema = new mongoose.Schema(
   {
@@ -33,7 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    avatar: {
+    coverImage: {
       //from cloudinary url
       type: String,
     },
@@ -43,7 +42,7 @@ const userSchema = new mongoose.Schema(
         ref: "Video",
       },
     ],
-    refreshToke: {
+    refreshToken: {
       type: String,
     },
   },
@@ -55,7 +54,7 @@ const userSchema = new mongoose.Schema(
 //don't use arrow function bcoz we want this key word
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    await bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
   }
   next();
 });
@@ -72,7 +71,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 //* for access token
 userSchema.methods.accessTokenGenerate = async function () {
   return await jwt.sign(
-    //payload,secret,expire
+    //payload, secret, expiresIn
     {
       _id: this._id,
       email: this.email,
@@ -81,7 +80,7 @@ userSchema.methods.accessTokenGenerate = async function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expire: process.env.ACCESS_TOKEN_EXPIRE,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRE,
     }
   );
 };
@@ -89,13 +88,13 @@ userSchema.methods.accessTokenGenerate = async function () {
 //* for refresh token
 //this token has less payload
 userSchema.methods.refreshTokenGenerate = async function () {
-  return await bcrypt.sign(
+  return await jwt.sign(
     {
       _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expire: process.env.REFRESH_TOKEN_eXPIRE,
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRE,
     }
   );
 };
